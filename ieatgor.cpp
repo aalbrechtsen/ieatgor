@@ -79,7 +79,7 @@ int main(int argc, char **argv){
    if(num)
      chrTarInt=atoi(tok);
    else
-     chyrTarChar=strdup(tok); //not really need strdub in this case
+     chrTarChar=strdup(tok); //not really need strdub in this case
    
   int start=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
   int stop=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
