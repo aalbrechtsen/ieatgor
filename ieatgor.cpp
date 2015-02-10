@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////
-//    g++ -O3 -o ieatgor ieatgorV3.cpp -lz
-//    ./getTarget targetRegion.txt temp.mafs
-//   prog/getTarget target.temp ~/temp.gorout  | head -n1
-//  Anders Albrechtsen
-// input files needs to be sorted
-// works for all files with chr and positions as the two first tab seperated columns
+//    g++ -O3 -o ieatgor ieatgor.cpp -lz
+//    ./ieatgor targetRegion.txt file.gor
+//     Anders Albrechtsen
+//     input files needs to be sorted
+//     works for all files with chr and positions as the two first tab seperated columns
 //////////////////////////////////////////////////////////////////////////
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -14,6 +14,8 @@
 #include <string>
 #include "zlib.h"
 #define LENS 100000 //this is the max number of bytes perline, should make bigger
+
+//who needs functions. everthing in the main!!!!
 int main(int argc, char **argv){
   int skip=0; // numer of lines to skip (e.g. to keep a header)
   int num=0;// is the file in numeric (1) or lexical (0) order 
@@ -38,53 +40,50 @@ int main(int argc, char **argv){
     fprintf(stderr,"Error opening file: %s\n",targetFileName);
     exit(0);
   }
-   if(NULL==(mafFile=gzopen(mafFileName,"r"))){
+  if(NULL==(mafFile=gzopen(mafFileName,"r"))){
     fprintf(stderr,"Error opening file: %s\n",mafFileName);
     exit(0);
-   }
-
-
-   for(int i=3;i<argc;i++){
-     if(strcmp(argv[i],"-offset")==0){
-       i++;
-       offset=atoi(argv[i]);
-     }
-     else if(strcmp(argv[i],"-skip")==0){
-       i++;
-       skip=atoi(argv[i]);
-     }
-     else if(strcmp(argv[i],"-num")==0){
-       i++;
-       num=atoi(argv[i]);
-     }
-     else {
-       printf("\tUnknown arguments: %s\n",argv[i]);
+  }
+  
+  for(int i=3;i<argc;i++){
+    if(strcmp(argv[i],"-offset")==0){
+      i++;
+      offset=atoi(argv[i]);
+    }
+    else if(strcmp(argv[i],"-skip")==0){
+      i++;
+      skip=atoi(argv[i]);
+    }
+    else if(strcmp(argv[i],"-num")==0){
+      i++;
+      num=atoi(argv[i]);
+    }
+    else {
+      printf("\tUnknown arguments: %s\n",argv[i]);
       printf("USE -offset AFTER the target and file\n");
       return 0;
     }
 
-   }
-   char bufTarget[LENS];
-   char bufMaf[LENS];
+  }
+  char bufTarget[LENS];
+  char bufMaf[LENS];
 
-   if(fgets(bufTarget,LENS,targetFile)==0)
-     fprintf(stderr,"no data in target:\n");
+  if(fgets(bufTarget,LENS,targetFile)==0)
+    fprintf(stderr,"no data in target:\n");
 
+  char *tok = strtok_r(bufTarget,delimsTarget,&saveptrTar);//strtok_r(bufTarget,delimsTarget,&saveptrTar);
+  int chrTarInt;
+  char* chrTarChar;
   
-
-   char *tok = strtok_r(bufTarget,delimsTarget,&saveptrTar);//strtok_r(bufTarget,delimsTarget,&saveptrTar);
-   int chrTarInt;
-   char* chrTarChar;
-    
-   if(num)
-     chrTarInt=atoi(tok);
-   else
-     chrTarChar=strdup(tok); //not really need strdub in this case
-   
+  if(num)
+    chrTarInt=atoi(tok);
+  else
+    chrTarChar=strdup(tok); //not really need strdub in this case
+  
   int start=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
   int stop=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
   char *f=gzgets(mafFile,bufMaf,LENS);
- 
+  
   //skip the first "skip" lines but print them
   for(int i=0;i<skip;i++){
     char *tokSkip=strtok_r(bufMaf,"\n",&saveptrMaf);
@@ -93,13 +92,11 @@ int main(int argc, char **argv){
   } 
 
 
-  
-
   if(tok==NULL){
     fprintf(stderr,"NULL pointer:\n");
     return 0;
   }
-
+  
 
   if(num){//if the chromosones are in numeric order
     
@@ -120,8 +117,8 @@ int main(int argc, char **argv){
       while(comp>0||(comp==0&&pos>stop)){
 	if(fgets(bufTarget,LENS,targetFile)==0){
 	  fprintf(stderr,"no more target file \n");
-	goto gotoEndOfLoopNum;
-	
+	  goto gotoEndOfLoopNum;
+	  
 	}
 	
 	chrTarInt=atoi(strtok_r(bufTarget,delimsTarget,&saveptrTar)); 
@@ -150,7 +147,7 @@ int main(int argc, char **argv){
       if(comp<0)
 	continue;
       
-
+      
       char *tok2 = strtok_r(NULL,delimsMafs,&saveptrMaf);
       int pos=atoi(tok2);
       
@@ -177,18 +174,16 @@ int main(int argc, char **argv){
       }
     }
   gotoEndOfLoop:;
-   free(chrTarChar);
+    free(chrTarChar);
     free(chrMaf);
-
+    
   }// end lexical
-
-    fclose(targetFile);
-    gzclose(mafFile);
- 
- 
+  
+  fclose(targetFile);
+  gzclose(mafFile);
+  
+  
   return 0;
 }
 
 
-    //strcmp(chr,chr2)==0
-    //chr<chr2 => negativ
