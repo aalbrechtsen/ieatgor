@@ -82,10 +82,11 @@ int main(int argc, char **argv){
   
   int start=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
   int stop=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
-  char *f=gzgets(mafFile,bufMaf,LENS);
+  char *f;
   
   //skip the first "skip" lines but print them
   for(int i=0;i<skip;i++){
+    f = gzgets(mafFile,bufMaf,LENS);
     char *tokSkip=strtok_r(bufMaf,"\n",&saveptrMaf);
     fprintf(stdout,"%s\n",bufMaf);
     f=gzgets(mafFile,bufMaf,LENS);
