@@ -24,12 +24,13 @@ int main(int argc, char **argv){
   int posColumn=2;
   if(argc==1){
     fprintf(stderr,"\nRUN:\tieatgor <targetFile> <file> OPTIONS\n\n");
-    fprintf(stderr,"target file format:\t chrName:start-end\n\n");
+    fprintf(stderr,"target file format:\t chrName:start-end\n or \t\t\t chrName:position\n\n");
     fprintf(stderr,"OPTIONS:\n");
     fprintf(stderr,"\t-offset INT\t offset the target positions by INT\n");
     fprintf(stderr,"\t-skip INT\t number of lines to skip (will be printet)\n");
     fprintf(stderr,"\t-num INT\t are the chromosome in lexical (default 0) or numeric (1) order \n");
    fprintf(stderr,"\t-chr INT\t column of chr (default 1) \n");
+   fprintf(stderr,"\t-pos INT\t column of position (default 2) \n");
     exit(0);
   }
   const char* targetFileName=argv[1];
@@ -101,8 +102,14 @@ int main(int argc, char **argv){
   else
     chrTarChar=strdup(tok); //not really need strdub in this case
   
+  int stop;
   int start=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
-  int stop=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
+  char *pch = strtok_r(NULL,delimsTarget,&saveptrTar);
+  if(pch == NULL)
+    stop=start;
+  else
+    stop=atoi(pch);
+
   char *f;
   
   //skip the first "skip" lines but print them
@@ -154,8 +161,15 @@ int main(int argc, char **argv){
 	}
 	
 	chrTarInt=atoi(strtok_r(bufTarget,delimsTarget,&saveptrTar)); 
-	start=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
-	stop=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
+	start=atoi(strtok_r(NULL,delimsTarget,&saveptrTar))+offset;
+	char *pch = strtok_r(NULL,delimsTarget,&saveptrTar);
+	if(pch == NULL)
+	  stop=start;
+	else
+	  stop=atoi(pch)+offset;
+
+
+
 	comp=chrInput-chrTarInt;
 	//  fprintf(stdout,"all %s %d %d\n",chrTarInt,start,stop);
       }
@@ -215,7 +229,12 @@ int main(int argc, char **argv){
 	free(chrTarChar);
 	chrTarChar=strdup(strtok_r(bufTarget,delimsTarget,&saveptrTar)); 
 	start=atoi(strtok_r(NULL,delimsTarget,&saveptrTar))+offset;
-	stop=atoi(strtok_r(NULL,delimsTarget,&saveptrTar))+offset;
+	char *pch = strtok_r(NULL,delimsTarget,&saveptrTar);
+	if(pch == NULL)
+	  stop=start;
+	else
+	  stop=atoi(pch)+offset;
+
 	comp=strcmp(chrInput,chrTarChar);
 	//  fprintf(stdout,"all %s %d %d\n",chrTarChar,start,stop);
       }
