@@ -33,8 +33,8 @@ int main(int argc, char **argv){
   }
   const char* targetFileName=argv[1];
   const char* mafFileName=argv[2];
-  const char *delimsTarget = "\t-:\n";
-  const char *delimsMafs = "\t\n";
+  const char *delimsTarget = "\t-:\n ";
+  const char *delimsMafs = "\t\n ";
   FILE *targetFile = NULL;
   gzFile mafFile = NULL;
   int offset=0;
@@ -143,6 +143,7 @@ int main(int argc, char **argv){
       if(comp<0)
 	continue;
       char *tok2 = strtok_r(NULL,delimsMafs,&saveptrMaf);
+      
       int pos=atoi(tok2);
       
       if(comp==0&&pos<start)
