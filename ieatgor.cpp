@@ -27,6 +27,8 @@ int main(int argc, char **argv){
     fprintf(stderr,"\t-offset INT\t offset the target positions by INT\n");
     fprintf(stderr,"\t-skip INT\t number of lines to skip (will be printet)\n");
     fprintf(stderr,"\t-num INT\t are the chromosome in lexical (default 0) or numeric (1) order \n");
+    fprintf(stderr,"\t-rmChrTarget INT\t ignore \"chr\" in target \n");
+    fprintf(stderr,"\t-rmChrInput INT\t ignore \"chr\" in input \n");
     exit(0);
   }
   const char* targetFileName=argv[1];
@@ -36,6 +38,8 @@ int main(int argc, char **argv){
   FILE *targetFile = NULL;
   gzFile mafFile = NULL;
   int offset=0;
+  int rmChrT=0;
+  int rmChrI=0;
   if(NULL==(targetFile=fopen(targetFileName,"r"))){
     fprintf(stderr,"Error opening file: %s\n",targetFileName);
     exit(0);
@@ -58,6 +62,14 @@ int main(int argc, char **argv){
       i++;
       num=atoi(argv[i]);
     }
+    else if(strcmp(argv[i],"-rmChrTarget")==0){
+      i++;
+      rmChrT=atoi(argv[i]);
+    }
+    else if(strcmp(argv[i],"-rmChrInput")==0){
+      i++;
+      rmChrI=atoi(argv[i]);
+    }
     else {
       printf("\tUnknown arguments: %s\n",argv[i]);
       printf("USE -offset AFTER the target and file\n");
@@ -71,12 +83,21 @@ int main(int argc, char **argv){
   if(fgets(bufTarget,LENS,targetFile)==0)
     fprintf(stderr,"no data in target:\n");
 
-  char *tok = strtok_r(bufTarget,delimsTarget,&saveptrTar);//strtok_r(bufTarget,delimsTarget,&saveptrTar);
+  char *tok;// = strtok_r(bufTarget,delimsTarget,&saveptrTar);//strtok_r(bufTarget,delimsTarget,&saveptrTar);
   int chrTarInt;
   char* chrTarChar;
   
-  if(num)
-    chrTarInt=atoi(tok);
+  if(num){
+    
+	if(rmChrT){
+	  char *Tempp=strtok_r(bufTarget,"r",&saveptrTar); 
+	  tok=strtok_r(NULL,delimsTarget,&saveptrTar); 
+	}
+	else 
+	tok = strtok_r(bufTarget,delimsTarget,&saveptrTar);
+
+	chrTarInt=atoi(tok);
+  }
   else
     chrTarChar=strdup(tok); //not really need strdub in this case
 
@@ -111,8 +132,11 @@ int main(int argc, char **argv){
     
     int chrMaf=0;
     while((f=gzgets(mafFile,bufMaf,LENS))) {
-      char *tok2Chr=strtok_r(bufMaf,delimsMafs,&saveptrMaf);
-      
+      if(rmChrI)
+	char *tok2ChrT=strtok_r(bufMaf,"r",&saveptrMaf);
+      char *tok2Chr=strtok_r(NULL,delimsMafs,&saveptrMaf);
+      //fprintf(stdout,"all %s\n",tok2Chr);
+    
       chrMaf=atoi(tok2Chr);
       // fprintf(stderr,"chr %d %d\n",chrMaf,chrTarInt);
       int comp=chrMaf-chrTarInt;
@@ -129,16 +153,18 @@ int main(int argc, char **argv){
 	  goto gotoEndOfLoopNum;
 	  
 	}
-	
-	chrTarInt=atoi(strtok_r(bufTarget,delimsTarget,&saveptrTar)); 
+	if(rmChrT){
+	  char *Tempp=strtok_r(bufTarget,"r",&saveptrTar); 
+	  chrTarInt=atoi(strtok_r(NULL,delimsTarget,&saveptrTar)); 
+	}
+	else 
+	  chrTarInt=atoi(strtok_r(bufTarget,delimsTarget,&saveptrTar)); 
 	start=atoi(strtok_r(NULL,delimsTarget,&saveptrTar))+offset;
 	char *pch = strtok_r(NULL,delimsTarget,&saveptrTar);
 	if(pch == NULL)
 	  stop=start;
 	else
 	  stop=atoi(pch)+offset;
-
-
 
 	comp=chrMaf-chrTarInt;
 	//  fprintf(stdout,"all %s %d %d\n",chrTarInt,start,stop);
@@ -147,7 +173,10 @@ int main(int argc, char **argv){
 	continue;
       else{
 	// fprintf(stdout,"realTar %s %d %d\n",chrTarInt,start,stop);
-	fprintf(stdout,"%d\t%d\t%s",chrMaf,pos,bufMaf+strlen(tok2)+strlen(tok2Chr)+2);
+	if(rmChrI==0)
+	  fprintf(stdout,"%d\t%d\t%s",chrMaf,pos,bufMaf+strlen(tok2)+strlen(tok2Chr)+2);
+	else
+	  fprintf(stdout,"chr%d\t%d\t%s",chrMaf,pos,bufMaf+strlen(tok2)+strlen(tok2Chr)+2+3);
       }
     }
   gotoEndOfLoopNum:;
@@ -162,8 +191,7 @@ int main(int argc, char **argv){
       int comp=strcmp(chrMaf,chrTarChar);
       if(comp<0)
 	continue;
-      
-      
+    
       char *tok2 = strtok_r(NULL,delimsMafs,&saveptrMaf);
       int pos=atoi(tok2);
       
