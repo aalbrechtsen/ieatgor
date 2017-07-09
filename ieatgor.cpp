@@ -17,6 +17,11 @@
 
 //who needs functions. everthing in the main!!!!
 int main(int argc, char **argv){
+
+
+
+  int nKeys=0;
+  int nLines=0;
   int skip=0; // numer of lines to skip (e.g. to keep a header)
   int num=0;// is the file in numeric (1) or lexical (0) order 
   char *saveptrMaf, *saveptrTar;
@@ -129,16 +134,20 @@ int main(int argc, char **argv){
   
 
   if(num){//if the chromosones are in numeric order
-    
+    int newKey=1;
     int chrMaf=0;
+    char *tok2Chr;
     while((f=gzgets(mafFile,bufMaf,LENS))) {
-      if(rmChrI)
+      if(rmChrI){
 	char *tok2ChrT=strtok_r(bufMaf,"r",&saveptrMaf);
-      char *tok2Chr=strtok_r(NULL,delimsMafs,&saveptrMaf);
+	tok2Chr=strtok_r(NULL,delimsMafs,&saveptrMaf);
+      }
+      else
+	tok2Chr=strtok_r(bufMaf,delimsMafs,&saveptrMaf);
       //fprintf(stdout,"all %s\n",tok2Chr);
     
       chrMaf=atoi(tok2Chr);
-      // fprintf(stderr,"chr %d %d\n",chrMaf,chrTarInt);
+      //fprintf(stderr,"chr %d %d\n",chrMaf,chrTarInt);
       int comp=chrMaf-chrTarInt;
       if(comp<0)
 	continue;
@@ -149,6 +158,7 @@ int main(int argc, char **argv){
       if(comp==0&&pos<start)
 	continue;
       while(comp>0||(comp==0&&pos>stop)){
+	newKey=1;
 	if(fgets(bufTarget,LENS,targetFile)==0){
 	  fprintf(stderr,"no more target file \n");
 	  goto gotoEndOfLoopNum;
@@ -168,17 +178,21 @@ int main(int argc, char **argv){
 	  stop=atoi(pch)+offset;
 
 	comp=chrMaf-chrTarInt;
-	//  fprintf(stdout,"all %s %d %d\n",chrTarInt,start,stop);
+	//fprintf(stdout,"all %s %d %d\n",chrTarInt,start,stop);
       }
       if(comp<0||pos<start)
 	continue;
       else{
+	nLines++;
+	if(newKey)
+	  nKeys++;
 	// fprintf(stdout,"realTar %s %d %d\n",chrTarInt,start,stop);
 	if(rmChrI==0)
 	  fprintf(stdout,"%d\t%d\t%s",chrMaf,pos,bufMaf+strlen(tok2)+strlen(tok2Chr)+2);
 	else
 	  fprintf(stdout,"chr%d\t%d\t%s",chrMaf,pos,bufMaf+strlen(tok2)+strlen(tok2Chr)+2+3);
       }
+      newKey=0;
     }
   gotoEndOfLoopNum:;
   }
@@ -188,7 +202,16 @@ int main(int argc, char **argv){
     
     while((f=gzgets(mafFile,bufMaf,LENS))) {
       free(chrMaf);
-      chrMaf=strdup(strtok_r(bufMaf,delimsMafs,&saveptrMaf));
+
+
+      if(rmChrI){
+	char *tok2ChrT=strdup(strtok_r(bufMaf,delimsMafs,&saveptrMaf));
+	chrMaf=strdup(strtok_r(NULL,delimsMafs,&saveptrMaf));
+      }
+      else
+	chrMaf=strdup(strtok_r(bufMaf,delimsMafs,&saveptrMaf));
+
+      
       int comp=strcmp(chrMaf,chrTarChar);
       if(comp<0)
 	continue;
@@ -232,7 +255,7 @@ int main(int argc, char **argv){
   fclose(targetFile);
   gzclose(mafFile);
   
-  
+  fprintf(stderr,"Used keys=%d, \tLine match=%d\n",nKeys,nLines);
   return 0;
 }
 
