@@ -91,21 +91,24 @@ int main(int argc, char **argv){
   char *tok;// = strtok_r(bufTarget,delimsTarget,&saveptrTar);//strtok_r(bufTarget,delimsTarget,&saveptrTar);
   int chrTarInt;
   char* chrTarChar;
+       
+ 
+     
+  if(rmChrT){
+    char *Tempp=strtok_r(bufTarget,"r",&saveptrTar); 
+    tok=strtok_r(NULL,delimsTarget,&saveptrTar); 
+  }
+  else 
+    tok = strtok_r(bufTarget,delimsTarget,&saveptrTar);
   
   if(num){
-    
-	if(rmChrT){
-	  char *Tempp=strtok_r(bufTarget,"r",&saveptrTar); 
-	  tok=strtok_r(NULL,delimsTarget,&saveptrTar); 
-	}
-	else 
-	tok = strtok_r(bufTarget,delimsTarget,&saveptrTar);
-
-	chrTarInt=atoi(tok);
+    chrTarInt=atoi(tok);
   }
-  else
+  else{
     chrTarChar=strdup(tok); //not really need strdub in this case
+    
 
+  }
   int stop;
   int start=atoi(strtok_r(NULL,delimsTarget,&saveptrTar));
   char *pch = strtok_r(NULL,delimsTarget,&saveptrTar);
@@ -123,7 +126,7 @@ int main(int argc, char **argv){
     f = gzgets(mafFile,bufMaf,LENS);
     char *tokSkip=strtok_r(bufMaf,"\n",&saveptrMaf);
     fprintf(stdout,"%s\n",bufMaf);
-    f=gzgets(mafFile,bufMaf,LENS);
+    // f=gzgets(mafFile,bufMaf,LENS);
   } 
 
 
@@ -197,21 +200,28 @@ int main(int argc, char **argv){
   gotoEndOfLoopNum:;
   }
   else{//begin lexical
-    
+      int newKey=1;
+  
     char* chrMaf=NULL;
     
     while((f=gzgets(mafFile,bufMaf,LENS))) {
+
       free(chrMaf);
 
-
+      
+      //	char *tok2ChrT=strtok_r(bufMaf,"r",&saveptrMaf);
+      //	tok2Chr=strtok_r(NULL,delimsMafs,&saveptrMaf);
+	
       if(rmChrI){
-	char *tok2ChrT=strdup(strtok_r(bufMaf,delimsMafs,&saveptrMaf));
+	char *tok2ChrT=strdup(strtok_r(bufMaf,"r",&saveptrMaf));
 	chrMaf=strdup(strtok_r(NULL,delimsMafs,&saveptrMaf));
+	//fprintf(stdout,"chr %s\n",chrMaf);
       }
       else
 	chrMaf=strdup(strtok_r(bufMaf,delimsMafs,&saveptrMaf));
 
-      
+      //fprintf(stdout,"chr %s\n",chrMaf);
+
       int comp=strcmp(chrMaf,chrTarChar);
       if(comp<0)
 	continue;
@@ -222,13 +232,23 @@ int main(int argc, char **argv){
       if(comp==0&&pos<start)
 	continue;
       while(comp>0||(comp==0&&pos>stop)){
+		newKey=1;
+
 	if(fgets(bufTarget,LENS,targetFile)==0){
 	  fprintf(stderr,"no more target file \n");
 	  goto gotoEndOfLoop;
 	  
 	}
 	free(chrTarChar);
-	chrTarChar=strdup(strtok_r(bufTarget,delimsTarget,&saveptrTar)); 
+
+	if(rmChrT){
+	  char *Tempp=strtok_r(bufTarget,"r",&saveptrTar); 
+	  chrTarChar=strdup(strtok_r(NULL,delimsTarget,&saveptrTar)); 
+	}
+	else 
+	  chrTarChar=strdup(strtok_r(bufTarget,delimsTarget,&saveptrTar)); 
+
+	
 	start=atoi(strtok_r(NULL,delimsTarget,&saveptrTar))+offset;
 	char *pch = strtok_r(NULL,delimsTarget,&saveptrTar);
 	if(pch == NULL)
@@ -242,9 +262,18 @@ int main(int argc, char **argv){
       if(comp<0||pos<start)
 	continue;
       else{
+	nLines++;
+	if(newKey)
+	  nKeys++;
 	// fprintf(stdout,"realTar %s %d %d\n",chrTarChar,start,stop);
-	fprintf(stdout,"%s\t%d\t%s",chrMaf,pos,bufMaf+strlen(chrMaf)+strlen(tok2)+2);
+	//	fprintf(stdout,"%s\t%d\t%s",chrMaf,pos,bufMaf+strlen(chrMaf)+strlen(tok2)+2);
+	if(rmChrI==0)
+	  fprintf(stdout,"%s\t%d\t%s",chrMaf,pos,bufMaf+strlen(chrMaf)+strlen(tok2)+2);
+	else
+	  fprintf(stdout,"chr%s\t%d\t%s",chrMaf,pos,bufMaf+strlen(chrMaf)+strlen(tok2)+2+3);
       }
+      newKey=0;
+
     }
   gotoEndOfLoop:;
     free(chrTarChar);
